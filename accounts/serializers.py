@@ -1,7 +1,9 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
+import logging
 
+logger = logging.getLogger(__name__)
 
 # ✅ For Signup
 class RegisterSerializer(serializers.ModelSerializer):
@@ -27,8 +29,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
         return user
 
-
-# ✅ For Password Reset Confirm
+# ✅ For Password Reset Confirm - FIXED VERSION
 class PasswordResetConfirmSerializer(serializers.Serializer):
     new_password = serializers.CharField(
         write_only=True, required=True, validators=[validate_password]
@@ -43,7 +44,16 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         return attrs
 
     def save(self, user):
+        """
+        Save the new password to the user
+        """
         password = self.validated_data['new_password']
+        logger.info(f"Setting new password for user: {user.username}")
+        logger.info(f"Password length: {len(password)}")
+        
+        # ✅ Use set_password to properly hash and save the password
         user.set_password(password)
         user.save()
+        
+        logger.info(f"Password saved successfully for user: {user.username}")
         return user
